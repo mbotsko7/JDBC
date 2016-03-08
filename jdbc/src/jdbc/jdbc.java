@@ -1,6 +1,3 @@
-package jdbc;
-
-import static JDBC.dispNull;
 import java.sql.*;
 import java.util.Scanner;
 
@@ -8,9 +5,8 @@ import java.util.Scanner;
  *
  * @author Mimi Opkins with some tweaking from Dave Brown
  */
-public class Jdbc {
-
-    //  Database credentials
+public class JDBC {
+     //  Database credentials
     static String USER;
     static String PASS;
     static String DBNAME;
@@ -104,30 +100,31 @@ public class Jdbc {
                         break;
                     case 2:
                         System.out.print("Enter album title: ");
-            ENTRY = in.nextLine();
+                        in.nextLine();
+                        ENTRY = in.nextLine();
+                        System.out.println("Entry is " + ENTRY);
             
-            System.out.println("Creating statement...");
-            stmt = conn.createStatement();
-            sql = "SELECT title, gpname, stname, dateRecorded, length, numSongs FROM album WHERE title = '";
-            sql += ENTRY + "'";
-            rs = stmt.executeQuery(sql);
+                        System.out.println("Creating statement...");
+                        stmt = conn.createStatement();
+                        sql = "SELECT title, gpname, stname, dateRecorded, length, numSongs FROM album WHERE title = '";
+                        sql += ENTRY + "'";
+                        rs = stmt.executeQuery(sql);
 
-            //STEP 5: Extract data from result set
-            System.out.printf("%-15s%-15s%-15s%-15s%-15s%-15s\n", "title", "gpname", "stname", "dateRecorded", "length", "numSongs");
-            while (rs.next()) {
-                //Retrieve by column name
-                String title = rs.getString("title");
-                String group = rs.getString("gpname");
-                String stname = rs.getString("stname");
-                String dateRecorded = rs.getString("dateRecorded");
-                String length = rs.getString("length");
-                String numSongs = rs.getString("numSongs");
-                
-                //Display values
-                System.out.printf("%-15s%-15s%-15s%-15s%-15s%-15s\n", dispNull(title), dispNull(group),dispNull(stname),dispNull(dateRecorded),dispNull(length),dispNull(numSongs));
-            }
-            //STEP 6: Clean-up environment
-            rs.close();
+                        //STEP 5: Extract data from result set
+                        System.out.printf("%-15s%-15s%-15s%-15s%-15s%-15s\n", "title", "gpname", "stname", "dateRecorded", "length", "numSongs");
+                        while (rs.next()) {
+                            //Retrieve by column name
+                            String title = rs.getString("title");
+                            String group = rs.getString("gpname");
+                            String stname = rs.getString("stname");
+                            String dateRecorded = rs.getString("dateRecorded");
+                            String length = rs.getString("length");
+                            String numSongs = rs.getString("numSongs");
+                            //Display values
+                            System.out.printf("%-15s%-15s%-15s%-15s%-15s%-15s\n", dispNull(group), dispNull(group),dispNull(stname),dispNull(dateRecorded),dispNull(length),dispNull(numSongs));
+                        }
+                        //STEP 6: Clean-up environment
+                        rs.close();
                         break;
                     case 3:
                         /*
