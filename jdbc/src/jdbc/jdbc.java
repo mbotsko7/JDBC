@@ -99,19 +99,17 @@ public class JDBC {
                         rs.close();
                         break;
                     case 2:
-                        System.out.print("Enter album title: ");
                         in.nextLine();
+                        System.out.print("Enter album title: ");
                         ENTRY = in.nextLine();
-                        System.out.println("Entry is " + ENTRY);
             
                         System.out.println("Creating statement...");
                         stmt = conn.createStatement();
-                        sql = "SELECT title, gpname, stname, dateRecorded, length, numSongs FROM album WHERE title = '";
-                        sql += ENTRY + "'";
+                        sql = "SELECT title, gpname, stname, dateRecorded, length, numSongs FROM album WHERE title = '" + ENTRY + "'";
                         rs = stmt.executeQuery(sql);
 
                         //STEP 5: Extract data from result set
-                        System.out.printf("%-15s%-15s%-15s%-15s%-15s%-15s\n", "title", "gpname", "stname", "dateRecorded", "length", "numSongs");
+                        System.out.printf("%-30s%-25s%-15s%-15s%-15s%-15s\n", "Title", "Group Name", "Studio Name", "Date Recorded", "Length", "Num Songs");
                         while (rs.next()) {
                             //Retrieve by column name
                             String title = rs.getString("title");
@@ -121,7 +119,7 @@ public class JDBC {
                             String length = rs.getString("length");
                             String numSongs = rs.getString("numSongs");
                             //Display values
-                            System.out.printf("%-15s%-15s%-15s%-15s%-15s%-15s\n", dispNull(group), dispNull(group),dispNull(stname),dispNull(dateRecorded),dispNull(length),dispNull(numSongs));
+                            System.out.printf("%-30s%-25s%-15s%-15s%-15s%-15s\n", dispNull(title), dispNull(group),dispNull(stname),dispNull(dateRecorded),dispNull(length),dispNull(numSongs));
                         }
                         //STEP 6: Clean-up environment
                         rs.close();
@@ -144,6 +142,66 @@ public class JDBC {
                         */
                         break;
                     case 4:
+                        in.nextLine();
+                        
+                        System.out.print("Enter studio to be replaced: ");
+                        String oldStudio = in.nextLine();
+                        
+                        System.out.print("Enter new studio name: ");
+                        ENTRY = in.nextLine();
+                        String newStudio = ENTRY;
+                        sql = "INSERT INTO studio VALUES ('" + ENTRY + "', '";
+                        
+                        System.out.print("Enter new studio address: ");
+                        ENTRY = in.nextLine();
+                        sql += ENTRY + "', '";
+                        
+                        System.out.print("Enter new studio owner: ");
+                        ENTRY = in.nextLine();
+                        sql += ENTRY + "', '";
+                        
+                        System.out.print("Enter new studio phone: ");
+                        ENTRY = in.nextLine();
+                        sql += ENTRY + "')";
+                        
+                        System.out.println("Creating statement...");
+                        stmt = conn.createStatement();
+                        stmt.executeUpdate(sql);
+                        
+                        // test
+                        sql = "UPDATE album SET stname = '" + newStudio + "' WHERE stname='" + oldStudio + "'";
+                        stmt = conn.createStatement();
+                        stmt.executeUpdate(sql);
+                        
+                        System.out.println("Updating records...");
+                        
+                        /*
+                        sql = "DELETE FROM studio WHERE stname = '" + oldStudio + "'";
+                        stmt = conn.createStatement();
+                        stmt.executeUpdate(sql);
+                        */
+                        
+                        sql = "SELECT title, gpname, s.stname, address, owner, phone FROM studio s INNER JOIN album a ON a.stname = s.stname WHERE s.stname = '" + newStudio + "'";
+                        stmt = conn.createStatement();
+                        rs = stmt.executeQuery(sql);
+                        
+                        //STEP 5: Extract data from result set
+                        System.out.printf("%-30s%-25s%-15s%-30s%-15s%-15s\n", "Title", "Group Name", "Studio Name", "Studio Address", "Studio Owner", "Studio Owner");
+                        while (rs.next()) {
+                            //Retrieve by column name
+                            String title = rs.getString("title");
+                            String group = rs.getString("gpname");
+                            String stname = rs.getString("stname");
+                            String address = rs.getString("address");
+                            String owner = rs.getString("owner");
+                            String phone = rs.getString("phone");
+                            //Display values
+                            System.out.printf("%-30s%-25s%-15s%-30s%-15s%-15s\n", dispNull(title), dispNull(group),dispNull(stname),dispNull(address),dispNull(owner),dispNull(phone));
+                        }
+                        
+                        //STEP 6: Clean-up environment
+                        rs.close();
+                        
                         break;
                     case 5:
                         break;
