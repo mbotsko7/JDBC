@@ -125,21 +125,96 @@ public class JDBC {
                         rs.close();
                         break;
                     case 3:
-                        /*
-                        sql = "INSERT INTO album VALUES ";
-                        System.out.println("Enter an album:");
-                        String name = in.nextLine();
-                        ResultSet rs = stmt.executeQuery(sql);
-                        while (rs.next()) {
-                            //Retrieve by column name
-                            String title = rs.getString("title");
+                        //complications on group and studio
+                        boolean good = true;
+                        sql = "INSERT INTO album VALUES (title, gpname, stName, dateRecorded, length, numSongs)";
+                        String name,
+                         group,
+                         studio,
+                         date,
+                         length,
+                         numSongs;
+                        name = group = studio = date = length = numSongs = "";
+                        in.useDelimiter("\n");
+                        while (good) {
+                            System.out.print("Enter an album name: ");
+                            name = in.next();
+                            if (name.length() > 40) {
+                                System.out.println("Too long of a name. Try again.");
 
-                            //Display values
-                            System.out.printf(displayFormat,
-                                    dispNull(title));
+                            } else {
+                                good = false;
+                            }
                         }
-                        rs.close();
-                        */
+                        good = true;
+                        while (good) {
+                            System.out.println("Enter an album group:");
+                            group = in.next();
+                            if (group.length() > 20) {
+                                System.out.println("Too long of a group name. Try again.");
+                            } else {
+                                good = false;
+                            }
+
+                        }
+                        good = true;
+                        while (good) {
+                            System.out.println("Enter an album studio:");
+                            studio = in.next();
+                            if (studio.length() > 20) {
+                                System.out.println("Too long of a name. Try again.");
+                            } else {
+                                good = false;
+                            }
+
+                        }
+                        good = true;
+                        while (good) {
+                            System.out.println("Enter an album date:");
+                            date = in.next();
+                            if (date.length() > 10) {
+                                System.out.println("Too long of a date. Try again.");
+                            } else {
+                                good = false;
+                            }
+
+                        }
+                        good = true;
+                        while (good) {
+                            System.out.println("Enter an album length:");
+                            length = in.next();
+                            if (length.length() > 9) {
+                                System.out.println("Too long of a time. Try again.");
+                            } else {
+                                good = false;
+                            }
+
+                        }
+                        //good = true;
+                        //while (good) {
+                        System.out.println("Enter an song count:");
+                        numSongs = in.next();
+                        //if (date.length() > 10) {
+                        //    System.out.println("Too long of a date. Try again.");
+                        //    good = false;
+                        //}
+                        //}
+                        
+                        PreparedStatement prep = conn.prepareStatement("INSERT INTO album VALUES(?,?,?,?,?,?)");
+                        prep.setString(1, name);
+                        prep.setString(2, group);
+                        prep.setString(3, studio);
+                        prep.setString(4, date);
+                        prep.setString(5, length);
+                        prep.setString(6, numSongs);
+                        
+                        prep.executeUpdate();
+                        //stmt.executeUpdate(sql);
+                        //sql = "SELECT * FROM album";
+                        //ResultSet rs2 = stmt.executeQuery(sql);
+                        //in.useDelimiter(" ");
+                        //s2.close();
+                        
                         break;
                     case 4:
                         in.nextLine();
@@ -204,6 +279,13 @@ public class JDBC {
                         
                         break;
                     case 5:
+                        System.out.println("Enter album to delete: ");
+                        in.useDelimiter("\n");
+                        String text = in.next();
+                        System.out.println("."+text+".");
+                        sql = "DELETE FROM album WHERE Title = \'" + text+"\'";
+                        stmt.executeUpdate(sql);
+                        in.useDelimiter(" ");
                         break;
                     default:
                         break;
