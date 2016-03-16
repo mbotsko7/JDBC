@@ -3,7 +3,7 @@ import java.util.Scanner;
 
 /**
  *
- * @author Mimi Opkins with some tweaking from Dave Brown
+ * @author Emily Yang and Michael Botsko
  */
 public class JDBC {
      //  Database credentials
@@ -53,7 +53,8 @@ public class JDBC {
         DB_URL = DB_URL + DBNAME + ";user=" + USER + ";password=" + PASS;
         Connection conn = null; //initialize the connection
         Statement stmt = null;  //initialize the statement that we're using
-
+        PreparedStatement pstmt = null;
+        
         try {
             //STEP 2: Register JDBC driver
             Class.forName("org.apache.derby.jdbc.ClientDriver");
@@ -99,15 +100,24 @@ public class JDBC {
                         rs.close();
                         break;
                     case 2:
+                        // check length
+                        // check title exists
+                        
                         in.nextLine();
                         System.out.print("Enter album title: ");
+                        
                         ENTRY = in.nextLine();
-            
-                        System.out.println("Creating statement...");
-                        stmt = conn.createStatement();
-                        sql = "SELECT title, gpname, stname, dateRecorded, length, numSongs FROM album WHERE title = '" + ENTRY + "'";
-                        rs = stmt.executeQuery(sql);
-
+                        sql = "SELECT title, gpname, stname, dateRecorded, length, numSongs FROM album WHERE title = ?";
+                        pstmt = conn.prepareStatement(sql,ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+                        
+                        pstmt.setString(1,ENTRY);
+                        rs = pstmt.executeQuery();
+                        
+                        if (!rs.isBeforeFirst()) {
+                            System.out.printf("Title '%s' does not exist in database.\n", ENTRY);
+                            break;
+                        }
+                        
                         //STEP 5: Extract data from result set
                         System.out.printf("%-30s%-25s%-15s%-15s%-15s%-15s\n", "Title", "Group Name", "Studio Name", "Date Recorded", "Length", "Num Songs");
                         while (rs.next()) {
@@ -218,60 +228,119 @@ public class JDBC {
                         break;
                     case 4:
                         in.nextLine();
+                        good = true;
+                        String oldStudio, newStudio, address, owner, phone;
+                        oldStudio = newStudio = address = owner = phone = "";
                         
-                        System.out.print("Enter studio to be replaced: ");
-                        String oldStudio = in.nextLine();
-                        
+                        // get new studio name
                         System.out.print("Enter new studio name: ");
-                        ENTRY = in.nextLine();
-                        String newStudio = ENTRY;
-                        sql = "INSERT INTO studio VALUES ('" + ENTRY + "', '";
+                        while (good) {
+                            newStudio = in.nextLine();
+                            if (newStudio.length() > 20)
+                                System.out.print("Too long of a name. Please try again: ");
+                            else
+                                good = false;
+                        }
                         
+                        // check if new studio already exists in database
+                        sql = "SELECT * FROM studio WHERE stname = ?";
+                        pstmt = conn.prepareStatement(sql,ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+                        pstmt.setString(1,newStudio);
+                        rs = pstmt.executeQuery();
+                        if (rs.isBeforeFirst()) {
+                            System.out.println("This studio already exists in the database.");
+                            break;
+                        }
+                        
+                        // get values for the rest of the studio attributes and add to database
+                        sql = "INSERT INTO studio VALUES ( ?, ?, ?, ?)";
+                        pstmt = conn.prepareStatement(sql,ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+
+                        good = true;
                         System.out.print("Enter new studio address: ");
-                        ENTRY = in.nextLine();
-                        sql += ENTRY + "', '";
+                        while (good) {
+                            address = in.nextLine();
+                            if (address.length() > 30)
+                                System.out.print("Too long of an entry. Please try again: ");
+                            else
+                                good = false;
+                        }
+                        good = true;
                         
                         System.out.print("Enter new studio owner: ");
-                        ENTRY = in.nextLine();
-                        sql += ENTRY + "', '";
+                        while (good) {
+                            owner = in.nextLine();
+                            if (owner.length() > 20)
+                                System.out.print("Too long of an entry. Please try again:");
+                            else
+                                good = false;
+                        }
+                        good = true;
                         
                         System.out.print("Enter new studio phone: ");
-                        ENTRY = in.nextLine();
-                        sql += ENTRY + "')";
+                        while (good) {
+                            phone = in.nextLine();
+
+                            if (!phone.matches("^\\d{10}$")) 
+                                System.out.print("Phone should be a ten digit number. Please try again: ");    
+                            else 
+                                good = false;
+                        }
+                        good = true;
                         
-                        System.out.println("Creating statement...");
-                        stmt = conn.createStatement();
-                        stmt.executeUpdate(sql);
+                        pstmt.setString(1,newStudio);                        
+                        pstmt.setString(2,address);
+                        pstmt.setString(3,owner);
+                        pstmt.setString(4,phone);
                         
-                        // test
-                        sql = "UPDATE album SET stname = '" + newStudio + "' WHERE stname='" + oldStudio + "'";
-                        stmt = conn.createStatement();
-                        stmt.executeUpdate(sql);
+                        pstmt.executeUpdate();
+                        
+                        // get old studio name
+                        while (good) {
+                            System.out.print("Enter studio to be replaced: ");
+                            oldStudio = in.nextLine();
+                            if (oldStudio.equals(newStudio)) {
+                                System.out.println("You cannot replace the same studio that you are adding. Please try again. ");
+                                continue;
+                            }
+                            sql = "SELECT * FROM studio WHERE stname = ?";
+                            pstmt = conn.prepareStatement(sql,ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);   
+                            pstmt.setString(1,oldStudio);
+                            rs = pstmt.executeQuery();
+                            if (!rs.isBeforeFirst()) 
+                                System.out.println("Studio does not exist in database. Please try again. ");
+                            else
+                                good = false;
+                        }
+                        good = true;                        
+                        
+                        // replace old studio with new studio for affected albums
+                        sql = "UPDATE album SET stname = ? WHERE stname = ?";
+                        pstmt = conn.prepareStatement(sql,ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+                        pstmt.setString(1, newStudio);
+                        pstmt.setString(2, oldStudio);
+                        pstmt.executeUpdate();
                         
                         System.out.println("Updating records...");
                         
-                        /*
-                        sql = "DELETE FROM studio WHERE stname = '" + oldStudio + "'";
-                        stmt = conn.createStatement();
-                        stmt.executeUpdate(sql);
-                        */
+                        // get updated album(s) showing new studio info
+                        sql = "SELECT title, gpname, s.stname, address, owner, phone FROM studio s INNER JOIN album a ON a.stname = s.stname WHERE s.stname = ?";
+                        pstmt = conn.prepareStatement(sql,ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);conn.createStatement();
+                        pstmt.setString(1, newStudio);
+                        rs = pstmt.executeQuery();
                         
-                        sql = "SELECT title, gpname, s.stname, address, owner, phone FROM studio s INNER JOIN album a ON a.stname = s.stname WHERE s.stname = '" + newStudio + "'";
-                        stmt = conn.createStatement();
-                        rs = stmt.executeQuery(sql);
-                        
-                        //STEP 5: Extract data from result set
+                        // print info
                         System.out.printf("%-30s%-25s%-15s%-30s%-15s%-15s\n", "Title", "Group Name", "Studio Name", "Studio Address", "Studio Owner", "Studio Owner");
                         while (rs.next()) {
                             //Retrieve by column name
                             String title = rs.getString("title");
-                            String group = rs.getString("gpname");
-                            String stname = rs.getString("stname");
-                            String address = rs.getString("address");
-                            String owner = rs.getString("owner");
-                            String phone = rs.getString("phone");
+                            group = rs.getString("gpname");
+                            newStudio = rs.getString("stname");
+                            address = rs.getString("address");
+                            owner = rs.getString("owner");
+                            phone = rs.getString("phone");
                             //Display values
-                            System.out.printf("%-30s%-25s%-15s%-30s%-15s%-15s\n", dispNull(title), dispNull(group),dispNull(stname),dispNull(address),dispNull(owner),dispNull(phone));
+                            System.out.printf("%-30s%-25s%-15s%-30s%-15s%-15s\n", dispNull(title), dispNull(group),dispNull(newStudio),dispNull(address),dispNull(owner),dispNull(phone));
                         }
                         
                         //STEP 6: Clean-up environment
