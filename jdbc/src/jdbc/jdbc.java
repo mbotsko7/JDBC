@@ -3,7 +3,7 @@ import java.util.Scanner;
 
 /**
  *
- * @author Emily Yang and Michael Botsko
+ * @author Mimi Opkins with some tweaking from Dave Brown
  */
 public class JDBC {
      //  Database credentials
@@ -53,8 +53,7 @@ public class JDBC {
         DB_URL = DB_URL + DBNAME + ";user=" + USER + ";password=" + PASS;
         Connection conn = null; //initialize the connection
         Statement stmt = null;  //initialize the statement that we're using
-        PreparedStatement pstmt = null;
-        
+
         try {
             //STEP 2: Register JDBC driver
             Class.forName("org.apache.derby.jdbc.ClientDriver");
@@ -108,7 +107,7 @@ public class JDBC {
                         
                         ENTRY = in.nextLine();
                         sql = "SELECT title, gpname, stname, dateRecorded, length, numSongs FROM album WHERE title = ?";
-                        pstmt = conn.prepareStatement(sql,ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+                        PreparedStatement pstmt = conn.prepareStatement(sql,ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
                         
                         pstmt.setString(1,ENTRY);
                         rs = pstmt.executeQuery();
@@ -139,12 +138,12 @@ public class JDBC {
                         boolean good = true;
                         sql = "INSERT INTO album VALUES (title, gpname, stName, dateRecorded, length, numSongs)";
                         String name,
-                         group,
+                         group2,
                          studio,
                          date,
                          length,
                          numSongs;
-                        name = group = studio = date = length = numSongs = "";
+                        name = group2 = studio = date = length = numSongs = "";
                         in.useDelimiter("\n");
                         while (good) {
                             System.out.print("Enter an album name: ");
@@ -159,8 +158,8 @@ public class JDBC {
                         good = true;
                         while (good) {
                             System.out.println("Enter an album group:");
-                            group = in.next();
-                            if (group.length() > 20) {
+                            group2 = in.next();
+                            if (group2.length() > 20) {
                                 System.out.println("Too long of a group name. Try again.");
                             } else {
                                 good = false;
@@ -212,7 +211,7 @@ public class JDBC {
                         
                         PreparedStatement prep = conn.prepareStatement("INSERT INTO album VALUES(?,?,?,?,?,?)");
                         prep.setString(1, name);
-                        prep.setString(2, group);
+                        prep.setString(2, group2);
                         prep.setString(3, studio);
                         prep.setString(4, date);
                         prep.setString(5, length);
@@ -224,7 +223,21 @@ public class JDBC {
                         //ResultSet rs2 = stmt.executeQuery(sql);
                         //in.useDelimiter(" ");
                         //s2.close();
-                        
+                        sql = "Select * from album";
+                        rs = stmt.executeQuery(sql);
+                        System.out.printf("%-30s%-25s%-15s%-15s%-15s%-15s\n", "Title", "Group Name", "Studio Name", "Date Recorded", "Length", "Num Songs");
+                        while (rs.next()) {
+                            //Retrieve by column name
+                            String title = rs.getString("title");
+                            String group = rs.getString("gpname");
+                            String stname = rs.getString("stname");
+                            String dateRecorded = rs.getString("dateRecorded");
+                            String length2 = rs.getString("length");
+                            String numSongs2 = rs.getString("numSongs");
+                            //Display values
+                            System.out.printf("%-30s%-25s%-15s%-15s%-15s%-15s\n", dispNull(title), dispNull(group),dispNull(stname),dispNull(dateRecorded),dispNull(length2),dispNull(numSongs2));
+                        }
+                       
                         break;
                     case 4:
                         in.nextLine();
@@ -334,7 +347,7 @@ public class JDBC {
                         while (rs.next()) {
                             //Retrieve by column name
                             String title = rs.getString("title");
-                            group = rs.getString("gpname");
+                            String group = rs.getString("gpname");
                             newStudio = rs.getString("stname");
                             address = rs.getString("address");
                             owner = rs.getString("owner");
@@ -355,6 +368,20 @@ public class JDBC {
                         sql = "DELETE FROM album WHERE Title = \'" + text+"\'";
                         stmt.executeUpdate(sql);
                         in.useDelimiter(" ");
+                        sql = "Select * from album";
+                        rs = stmt.executeQuery(sql);
+                        System.out.printf("%-30s%-25s%-15s%-15s%-15s%-15s\n", "Title", "Group Name", "Studio Name", "Date Recorded", "Length", "Num Songs");
+                        while (rs.next()) {
+                            //Retrieve by column name
+                            String title = rs.getString("title");
+                            String group = rs.getString("gpname");
+                            String stname = rs.getString("stname");
+                            String dateRecorded = rs.getString("dateRecorded");
+                            String length2 = rs.getString("length");
+                            String numSongs2 = rs.getString("numSongs");
+                            //Display values
+                            System.out.printf("%-30s%-25s%-15s%-15s%-15s%-15s\n", dispNull(title), dispNull(group),dispNull(stname),dispNull(dateRecorded),dispNull(length2),dispNull(numSongs2));
+                        }
                         break;
                     default:
                         break;
